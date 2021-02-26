@@ -1,0 +1,9 @@
+# ignore the generated files
+*.o
+*.ko
+*.mod.c
+*.symvers
+*.order
+*.cmd
+*.mk
+.tmp_versions
