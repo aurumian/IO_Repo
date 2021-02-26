@@ -103,7 +103,8 @@ static ssize_t my_read(struct file* file, char __user *user_buffer, size_t size,
     //struct my_device_data* data;
 
     //data = (struct my_device_data*) file->private_data;
-    ssize_t len = mmin(data.size - *offset, size);
+    // i need to be able to output 2 additional symbols: \n\r
+    ssize_t len = mmin(data.size - *offset, size - 2);
 
     if (len <= 0)
         return 0;
@@ -113,6 +114,12 @@ static ssize_t my_read(struct file* file, char __user *user_buffer, size_t size,
     }
 
     *offset += len;
+
+    // if we have read all the data in data.arr, output new line
+    if (*offset == data.size){
+        copy_to_user(user_buffer + len, "\n\r", 2);
+        len += 2;
+    }
 
     return len;
 }
