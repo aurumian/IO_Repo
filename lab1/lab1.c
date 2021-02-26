@@ -22,8 +22,6 @@ MODULE_AUTHOR("Tcherezovs");
 MODULE_DESCRIPTION("Lab1");
 
 struct my_device_data {
-    struct cdev cdev;
-    
     // the records (lengths as strings) are space seprated
     char arr[MAX_ARR_LEN];
     size_t size;
@@ -35,9 +33,15 @@ static struct cdev c_dev;
 static struct class* cl;
 static struct proc_dir_entry* entry;
 
+static struct my_device_data data;
+
 void  my_device_data_init(struct my_device_data* data){
     data->size = 0;
     data->start = 0;
+}
+
+ssize_t mmin (ssize_t a, ssize_t b){
+    return a < b ? a : b;
 }
 
 size_t get_num_digits(size_t d){
@@ -60,18 +64,18 @@ void remove_first_record(struct my_device_data* data){
 
 void push_back(struct my_device_data* data, size_t d){
     // make space for the data if there's not enough
-    size_t len = min(get_num_digits(d), MAX_NUM_DIGITS);
+    size_t len = mmin(get_num_digits(d), MAX_NUM_DIGITS);
     while (data->size + len >= MAX_ARR_LEN){
         remove_first_record(data);
     }
 
     // insert the d into data->arr as chars
+    data->size += len;
     size_t i;
-    for (i = 0; i < len; ++i){
-        size_t pos = (data->start + data->size) % MAX_ARR_LEN;
+    for (i = 1 ; i <= len; ++i){
+        size_t pos = (data->start + data->size - i) % MAX_ARR_LEN;
         data->arr[pos] = d % 10 + '0';
         d /= 10;
-        data->size++;
     }
     data->arr[(data->start + data->size) % MAX_ARR_LEN] = ' ';
     
@@ -85,29 +89,29 @@ void push_back(struct my_device_data* data, size_t d){
 
 static int my_open(struct inode* inode, struct file* file)
 {
-    struct my_device_data* data;
-    data = container_of(inode->i_cdev, struct my_device_data, cdev);
+    //struct my_device_data* data;
+    //data = container_of(inode->i_cdev, struct my_device_data, cdev);
 
-    file->private_data = data;
+    //file->private_data = data;
 
-    my_device_data_init(data);
+    //my_device_data_init(data);
     return 0;
 }
 
 static ssize_t my_read(struct file* file, char __user *user_buffer, size_t size, loff_t *offset)
 {
-    struct my_device_data* data;
+    //struct my_device_data* data;
 
-    data = (struct my_device_data*) file->private_data;
-    ssize_t len = min(data->size - *offset, size);
+    //data = (struct my_device_data*) file->private_data;
+    ssize_t len = mmin(data.size - *offset, size);
 
     if (len <= 0)
         return 0;
 
-    if (copy_to_user(user_buffer, data->arr + *offset, len)){
+    if (copy_to_user(user_buffer, data.arr + *offset, len)){
         return -EFAULT;
-    }    
-    
+    }
+
     *offset += len;
 
     return len;
@@ -115,9 +119,9 @@ static ssize_t my_read(struct file* file, char __user *user_buffer, size_t size,
 
 static ssize_t my_write(struct file* file, const char __user *user_buffer, size_t size, loff_t* offset)
 {
-    struct my_device_data* data;
-    data = (struct my_device_data*) file->private_data;
-    push_back(data, size);
+    //struct my_device_data* data;
+    //data = (struct my_device_data*) file->private_data;
+    push_back(&data, size - 1);
     printk(KERN_INFO "writing to var1");
 
     return size;
@@ -187,6 +191,9 @@ int __init my_init_module(void)
         unregister_chrdev_region(dev, 1);
         return -1;
     }
+
+    my_device_data_init(&data);
+    
     printk(KERN_INFO "lab1 module initialized\n");
     return 0;
 }
