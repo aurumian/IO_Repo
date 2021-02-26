@@ -118,6 +118,7 @@ static ssize_t my_write(struct file* file, const char __user *user_buffer, size_
     struct my_device_data* data;
     data = (struct my_device_data*) file->private_data;
     push_back(data, size);
+    printk(KERN_INFO "writing to var1");
 
     return size;
 }
@@ -167,7 +168,6 @@ int __init my_init_module(void)
     entry = proc_create("var1", 0444, NULL, &my_proc_fops);
 
     // create and register character device
-    printk(KERN_INFO "Initializing var1 module\n");
     if (alloc_chrdev_region(&dev, 0, 1, "dev_var1") < 0){
         return -1;
     }
@@ -187,6 +187,7 @@ int __init my_init_module(void)
         unregister_chrdev_region(dev, 1);
         return -1;
     }
+    printk(KERN_INFO "lab1 module initialized\n");
     return 0;
 }
 
@@ -209,6 +210,7 @@ void __exit my_cleanup_module(void)
     device_destroy(cl, dev);
     class_destroy(cl);
     unregister_chrdev_region(dev, 1);
+    printk(KERN_INFO "lab1 module cleaned\n");
 }
 
 module_init(my_init_module);
