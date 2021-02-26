@@ -9,12 +9,10 @@
 #include <linux/uaccess.h>
 #include <linux/proc_fs.h>
 
-/*
-#define MY_MAJOR            52
-#define MY_MAX_MINORS       5
-*/
 #define MAX_ARR_LEN         512 // must be greater than MAX_NUM_DIGITS !!!
 #define MAX_NUM_DIGITS      20 // this is how many digits there are in 2^64 - 1 
+
+#define EXTRA_TASK
 
 
 MODULE_LICENSE("GPL");
@@ -23,6 +21,9 @@ MODULE_DESCRIPTION("Lab1");
 
 struct my_device_data {
     // the records (lengths as strings) are space seprated
+#ifdef EXTRA_TASK
+    size_t total;
+#endif // EXTRA_TASK
     char arr[MAX_ARR_LEN];
     size_t size;
     size_t start;
@@ -38,6 +39,9 @@ static struct my_device_data data;
 void  my_device_data_init(struct my_device_data* data){
     data->size = 0;
     data->start = 0;
+    #ifdef EXTRA_TASK
+    data->total = 0;
+    #endif // EXTRA_TASK
 }
 
 ssize_t mmin (ssize_t a, ssize_t b){
@@ -51,6 +55,15 @@ size_t get_num_digits(size_t d){
         num_digits++;
     }
     return num_digits;
+}
+
+void to_chars(size_t x, char* buf, size_t num_digits){
+    size_t i;
+    for (i = 1 ; i <= num_digits; ++i){
+        size_t pos = num_digits - i;
+        buf[pos] = x % 10 + '0';
+        x /= 10;
+    }
 }
 
 void remove_first_record(struct my_device_data* data){
@@ -83,28 +96,31 @@ void push_back(struct my_device_data* data, size_t d){
 
 }
 
-
-
-//struct my_device_data devs[MY_MAX_MINORS];
-
 static int my_open(struct inode* inode, struct file* file)
 {
-    //struct my_device_data* data;
-    //data = container_of(inode->i_cdev, struct my_device_data, cdev);
-
-    //file->private_data = data;
-
-    //my_device_data_init(data);
+    
     return 0;
 }
 
 static ssize_t my_read(struct file* file, char __user *user_buffer, size_t size, loff_t *offset)
 {
-    //struct my_device_data* data;
+    ssize_t len;
 
-    //data = (struct my_device_data*) file->private_data;
-    // i need to be able to output 2 additional symbols: \n\r
-    ssize_t len = mmin(data.size - *offset, size - 2);
+#ifdef EXTRA_TASK
+    char buf[MAX_NUM_DIGITS + 2];
+    size_t num_digits = mmin(get_num_digits(data.total), MAX_NUM_DIGITS);
+    to_chars(data.total, buf, num_digits);
+    buf[num_digits] = '\n';
+    buf[num_digits+1] = '\r';
+    len = mmin(num_digits + 2 - *offset, size);
+    if (len <= 0)
+        return 0;
+    if (copy_to_user(user_buffer, buf + *offset, len)){
+        return -EFAULT;
+    }
+    *offset += len;
+#else 
+    len = mmin(data.size - *offset, size - 2);
 
     if (len <= 0)
         return 0;
@@ -120,15 +136,20 @@ static ssize_t my_read(struct file* file, char __user *user_buffer, size_t size,
         copy_to_user(user_buffer + len, "\n\r", 2);
         len += 2;
     }
+#endif // EXTRA_TASK
+    
 
     return len;
 }
 
 static ssize_t my_write(struct file* file, const char __user *user_buffer, size_t size, loff_t* offset)
 {
-    //struct my_device_data* data;
-    //data = (struct my_device_data*) file->private_data;
+
+#ifndef EXTRA_TASK
     push_back(&data, size - 1);
+#else 
+    data.total += size - 1;
+#endif // EXTRA_TASK
     printk(KERN_INFO "writing to var1");
 
     return size;
@@ -160,20 +181,6 @@ const struct file_operations my_proc_fops = {
 
 int __init my_init_module(void)
 {
-    /*int i, err;
-
-    err = register_chrdev_region(MKDEV(MY_MAJOR, 0), MY_MAX_MINORS, "my_device_driver");
-
-    if (err != 0) {
-        // report error
-        return err;
-    }
-
-    for (i = 0; i < MY_MAX_MINORS; ++i) {
-        cdev_init(&devs[i].cdev, &my_fops);
-        cdev_add(&devs[i].cdev, MKDEV(MY_MAJOR, i), 1);
-    }   
-    */
 
     // create and register proc device
     entry = proc_create("var1", 0444, NULL, &my_proc_fops);
@@ -207,15 +214,6 @@ int __init my_init_module(void)
 
 void __exit my_cleanup_module(void)
 {
-    /*
-    int i;
-    for (i = 0; i < MY_MAX_MINORS; ++i) {
-        // release devs[i] fields
-        cdev_del(&devs[i].cdev);
-    }
-    unregister_chrdev_region(MKDEV(MY_MAJOR, 0, MY_MAX_MINORS);
-    */
-
     // cleanup proc
     proc_remove(entry);
 
