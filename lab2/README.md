@@ -15,38 +15,38 @@
 ## Инструкция по сборке
 
 1. Соберите программу: `make`
-2. Добавляем драйвер в ядро. В директории `/dev` будет 5 девайсов _var5pN_, где _N_ - номер раздела:
-    > insmod var5.ko
+2. Добавляем драйвер в ядро. В директории `/dev` будет 5 девайсов mydisk, mydisk1, mydisk2, mydisk5, mydisk6:
+    > insmod lab2.ko
 3. Создаем файловые системы на девайсах: 
-    > mkfs.vfat -F16 /dev/var5p1 && mkfs.vfat -F16 /dev/var5p5
+    > mkfs.vfat -F16 /dev/mydisk1 && mkfs.vfat -F16 /dev/mydisk5
 4. Монтируем их в точки монтирования: 
-    > mkdir -p /mnt/var5p1 /mnt/var5p5 && mount /dev/var5p1 /mnt/var5p1 && mount /dev/var5p5 /mnt/var5p5
+    > mkdir -p /mnt/mydisk1 /mnt/mydisk5 && mount /dev/mydisk1 /mnt/mydisk1 && mount /dev/mydisk5 /mnt/mydisk5
 
 ## Примеры использования
 
 Проверка точки монтирования
 ```bash
-$ mount -l | grep "/dev/var5"
+$ mount -l | grep "/dev/mydisk"
 ```
 
 Размонтирование файловых систем и деинициализация драйвера:
 ```bash
-$ umount /dev/var5p1 && umount /dev/var5p5
-$ rmmod var5
+$ umount /dev/mydisk1 && umount /dev/mydisk5
+$ rmmod lab2
 ```
 
 Проверка сообщений в кольцевом буфере
 ```bash
-$ cd /mnt/var5p1
+$ cd /mnt/mydisk1
 $ touch example
 $ dmesg
 ...
-[var5]: Sector: 6035, Sector Offset: 0; Buffer: 00000002989b254; Length: 8 sectors
+
 ```
 
 Создание файлов на виртуальном устройстве
 ```bash
-$ cd /mnt/var5p1
+$ cd /mnt/mydisk1
 $ echo "Hello block device" > ./hello
 ```
 
@@ -55,13 +55,13 @@ $ echo "Hello block device" > ./hello
 Измерение скорости передачи данных при копировании файлов между разделами виртуального диска
 ```bash
 $ fallocate -l 7340032 /mnt/var5p1/example.txt              # создание файла 7Мбайт
-$ pv -pr /mnt/var5p1/example.txt > /mnt/var5p5/example.txt  # копирование файла из виртуального раздела 1 в логический виртуальный раздел 5
+$ pv -pr /mnt/mydisk1/file.txt > /mnt/mydisk5/file.txt  # копирование файла из виртуального раздела 1 в логический виртуальный раздел 5
 ```
 
 Измерение скорости передачи данных при копировании файлов между разделами виртуального диска
 ```bash
 $ fallocate -l 7340032 /mnt/example.txt              # создание файла 7Мбайт
-$ pv -pr /mnt/example.txt > /mnt/var5p1/example.txt  # копирование файла из реального диска в виртуальный диск
+$ pv -pr /mnt/file.txt > /mnt/mydisk1/file.txt  # копирование файла из реального диска в виртуальный диск
 ```
 
 размер (Mbyte) | количество тестов | с реального на виртуальный (Mbit/s) | с виртуального на виртуальный (Mbit/s)

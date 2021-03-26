@@ -9,8 +9,9 @@
 #include <linux/bio.h>
 #include <linux/string.h>
 
+#define MIB2SEC(mib) (mib * 1024 * 1024 / SECTOR_SIZE)
 
-#define MEMSIZE 0xF000 // Size of Ram disk in sectors
+#define MEMSIZE MIB2SEC(50) // Size of Ram disk in sectors
 int c = 0; //Variable for Major Number 
 
 #define SECTOR_SIZE 512
@@ -28,7 +29,7 @@ int c = 0; //Variable for Major Number
 #define BR_SIGNATURE_SIZE 2
 #define BR_SIGNATURE 0xAA55
 
-#define MIB2SEC(mib) (mib * 1024 * 1024 / SECTOR_SIZE)
+
 
 typedef struct
 {
