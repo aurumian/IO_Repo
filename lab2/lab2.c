@@ -62,25 +62,25 @@ static PartTable def_part_table =
 {
 	{
 		boot_type: 0x00,
-		start_sec: 0x2,
+		start_sec: 0x0,
 		start_head: 0x0,
 		start_cyl: 0x0,
 		part_type: 0x83,
-		end_head: 0x3,
-		end_sec: 0x20,
-		end_cyl: 0x9F,
+		end_head: 0x0,
+		end_sec: 0x0,
+		end_cyl: 0x0,
 		abs_start_sec: 0x1,
-		sec_in_part: MIB2SEC(10) - 1 // 10Mbyte
+		sec_in_part: MIB2SEC(10) - 1 // 10 MiByte
 	},
 	{
 		boot_type: 0x00,
-		start_head: 0x4,
-		start_sec: 0x1,
+		start_head: 0x0,
+		start_sec: 0x0,
 		start_cyl: 0x0,
 		part_type: 0x05, // extended partition type
-		end_sec: 0x20,
-		end_head: 0xB,
-		end_cyl: 0x9F,
+		end_sec: 0x00,
+		end_head: 0x0,
+		end_cyl: 0x0,
 		abs_start_sec: MIB2SEC(10),
 		sec_in_part: MIB2SEC(40)
 	}
@@ -91,25 +91,25 @@ static const PartTable def_log_part_table[] =
 	{
 		{
 			boot_type: 0x00,
-			start_head: 0x4,
-			start_sec: 0x2, 
+			start_head: 0x0,
+			start_sec: 0x0, 
 			start_cyl: 0x0, 
 			part_type: 0x83,
-			end_head: 0x7,
-			end_sec: 0x20,
-			end_cyl: 0x9F,
+			end_head: 0x0,
+			end_sec: 0x0,
+			end_cyl: 0x0,
 			abs_start_sec: 0x1,
 			sec_in_part: MIB2SEC(20) - 1 
 		},
 		{
 			boot_type: 0x00,
-			start_head: 0x8,
-			start_sec: 0x01,
+			start_head: 0x0,
+			start_sec: 0x00,
 			start_cyl: 0x00,
 			part_type: 0x05,
-			end_head: 0xB,
-			end_sec: 0x20,
-			end_cyl: 0x9F,
+			end_head: 0x0,
+			end_sec: 0x00,
+			end_cyl: 0x0,
 			abs_start_sec: MIB2SEC(20),
 			sec_in_part: MIB2SEC(20)
 		}
@@ -117,13 +117,13 @@ static const PartTable def_log_part_table[] =
 	{
 		{
 			boot_type: 0x00,
-			start_head: 0x8,
-			start_sec: 0x02,
+			start_head: 0x0,
+			start_sec: 0x00,
 			start_cyl: 0x00,
 			part_type: 0x83,
-			end_head: 0xB,
-			end_sec: 0x20,
-			end_cyl: 0x9F,
+			end_head: 0x0,
+			end_sec: 0x00,
+			end_cyl: 0x0,
 			abs_start_sec: 0x1,
 			sec_in_part: MIB2SEC(20) - 1
 		}
