@@ -12,21 +12,27 @@
 
 ## Инструкция по сборке
 
-stud@stud-VBox:~/yt/tch/IO_Repo/lab1$ make
-stud@stud-VBox:~/yt/tch/IO_Repo/lab1$ sudo insmod lab1.ko
-stud@stud-VBox:~/yt/tch/IO_Repo/lab1$ sudo chmod a+w /dev/var1
+make
+
+sudo insmod lab1.ko
+
+sudo chmod a+w /dev/var1
 
 ...
 
 ## Инструкция пользователя
 Записать в файл /dev/var1
+
 Считать из файла /proc/var1
 ...
 
 ## Примеры использования
-stud@stud-VBox:~/yt/tch/IO_Repo/lab1$ echo "skljadlasd;ljasaskjdasldkj" > /dev/var1
-stud@stud-VBox:~/yt/tch/IO_Repo/lab1$ cat /proc/var1
-26 stud@stud-VBox:~/yt/tch/IO_Repo/lab1$ echo "skl" > /dev/var1
-stud@stud-VBox:~/yt/tch/IO_Repo/lab1$ cat /proc/var1
+echo "random text" > /dev/var1
+
+cat /proc/var1
+
+echo "skl" > /dev/var1
+
+cat /proc/var1
 
 ...
