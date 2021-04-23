@@ -77,7 +77,6 @@ static char check_frame(struct sk_buff *skb, unsigned char data_shift) {
         memcpy(data, user_data_ptr, data_len);
         data[data_len] = '\0';
 
-        printk ("Begin captured message");
         printk("Captured ICMP packet, saddr: %d.%d.%d.%d\n",
                 ntohl(ip->saddr) >> 24, (ntohl(ip->saddr) >> 16) & 0x00FF,
                 (ntohl(ip->saddr) >> 8) & 0x0000FF, (ntohl(ip->saddr)) & 0x000000FF);
@@ -98,8 +97,7 @@ static char check_frame(struct sk_buff *skb, unsigned char data_shift) {
             if (total >= STR_LEN - 3)
                 break;
         }        
-        printk("%s", str);
-        printk("End captured message");
+        printk("%s\n", str);
         return 1;
 
     }

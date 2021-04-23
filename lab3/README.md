@@ -41,7 +41,6 @@
 dmesg
 ...
 
-[ 6655.986745] Begin captured message
 [ 6655.986748] Captured ICMP packet, saddr: 192.168.56.1
 [ 6655.986749] daddr: 192.168.56.101
 [ 6655.986749] Data length: 52. Data:
