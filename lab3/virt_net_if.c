@@ -65,6 +65,9 @@ static char check_frame(struct sk_buff *skb, unsigned char data_shift) {
     struct icmphdr *icmp = NULL;
     int data_len = 0;
 
+    const size_t STR_LEN = 512;
+    char str[STR_LEN];
+
 	if (IPPROTO_ICMP == ip->protocol) {
         icmp = (struct icmphdr*)((unsigned char*)ip + (ip->ihl * 4));
         if (icmp->type != 8)
@@ -74,6 +77,7 @@ static char check_frame(struct sk_buff *skb, unsigned char data_shift) {
         memcpy(data, user_data_ptr, data_len);
         data[data_len] = '\0';
 
+        printk ("Begin captured message");
         printk("Captured ICMP packet, saddr: %d.%d.%d.%d\n",
                 ntohl(ip->saddr) >> 24, (ntohl(ip->saddr) >> 16) & 0x00FF,
                 (ntohl(ip->saddr) >> 8) & 0x0000FF, (ntohl(ip->saddr)) & 0x000000FF);
@@ -82,7 +86,20 @@ static char check_frame(struct sk_buff *skb, unsigned char data_shift) {
                 (ntohl(ip->daddr) >> 8) & 0x0000FF, (ntohl(ip->daddr)) & 0x000000FF);
 
     	printk(KERN_INFO "Data length: %d. Data:", data_len);
-        printk("%s", data);
+
+        int total = 0;
+        int i = 0;
+        for (i = 0; i < data_len; ++i)
+        {
+            int l = sprintf(str + total, "%02hhx ", data[i]);
+            if (l < 0)
+                break;
+            total += l;
+            if (total >= STR_LEN - 3)
+                break;
+        }        
+        printk("%s", str);
+        printk("End captured message");
         return 1;
 
     }
