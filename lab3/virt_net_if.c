@@ -7,6 +7,7 @@
 #include <net/arp.h>
 #include <linux/ip.h>
 #include <linux/udp.h>
+#include <linux/ip_icmp.h>
 
 static char* link = "enp0s3";
 module_param(link, charp, 0);
@@ -24,17 +25,19 @@ struct priv {
 static char check_frame(struct sk_buff *skb, unsigned char data_shift) {
 	unsigned char *user_data_ptr = NULL;
     struct iphdr *ip = (struct iphdr *)skb_network_header(skb);
-    struct udphdr *udp = NULL;
+    //struct udphdr *udp = NULL;
+    struct icmphdr icmp = NULL;
     int data_len = 0;
 
-	if (IPPROTO_UDP == ip->protocol) {
-        udp = (struct udphdr*)((unsigned char*)ip + (ip->ihl * 4));
-        data_len = ntohs(udp->len) - sizeof(struct udphdr);
-        user_data_ptr = (unsigned char *)(skb->data + sizeof(struct iphdr)  + sizeof(struct udphdr)) + data_shift;
+	if (IPPROTO_ICMP == ip->protocol) {
+        //udp = (struct udphdr*)((unsigned char*)ip + (ip->ihl * 4));
+        icmp = (struct icmphdr*)((unsigned char*)ip + (ip->ihl * 4));
+        data_len = ntohs(ip->tot_len) - sizeof(struct icmphdr);
+        user_data_ptr = (unsigned char *)(skb->data + sizeof(struct iphdr)  + sizeof(struct icmphdr)) + data_shift;
         memcpy(data, user_data_ptr, data_len);
         data[data_len] = '\0';
 
-        printk("Captured UDP datagram, saddr: %d.%d.%d.%d\n",
+        printk("Captured ICMP packet, saddr: %d.%d.%d.%d\n",
                 ntohl(ip->saddr) >> 24, (ntohl(ip->saddr) >> 16) & 0x00FF,
                 (ntohl(ip->saddr) >> 8) & 0x0000FF, (ntohl(ip->saddr)) & 0x000000FF);
         printk("daddr: %d.%d.%d.%d\n",
@@ -77,7 +80,7 @@ static int stop(struct net_device *dev) {
 static netdev_tx_t start_xmit(struct sk_buff *skb, struct net_device *dev) {
     struct priv *priv = netdev_priv(dev);
 
-    if (check_frame(skb, 14)) {
+    if (check_frame(skb, 0)) {
         stats.tx_packets++;
         stats.tx_bytes += skb->len;
     }
