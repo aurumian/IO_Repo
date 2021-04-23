@@ -7,7 +7,7 @@
 #include <net/arp.h>
 #include <linux/ip.h>
 #include <linux/udp.h>
-#include <linux/ip_icmp.h>
+#include <linux/icmp.h>
 
 static char* link = "enp0s3";
 module_param(link, charp, 0);
@@ -26,7 +26,7 @@ static char check_frame(struct sk_buff *skb, unsigned char data_shift) {
 	unsigned char *user_data_ptr = NULL;
     struct iphdr *ip = (struct iphdr *)skb_network_header(skb);
     //struct udphdr *udp = NULL;
-    struct icmphdr icmp = NULL;
+    struct icmphdr *icmp = NULL;
     int data_len = 0;
 
 	if (IPPROTO_ICMP == ip->protocol) {
