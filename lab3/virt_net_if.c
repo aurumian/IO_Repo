@@ -8,12 +8,17 @@
 #include <linux/ip.h>
 #include <linux/udp.h>
 #include <linux/icmp.h>
+#include <linux/proc_fs.h>
+
+static ssize_t proc_read(struct file*, char __user *, size_t, loff_t*);
 
 static char* link = "enp0s3";
 module_param(link, charp, 0);
 
 static char* ifname = "vni%d";
 static unsigned char data[1500];
+
+static struct proc_dir_entry* entry;
 
 static struct net_device_stats stats;
 
@@ -22,16 +27,48 @@ struct priv {
     struct net_device *parent;
 };
 
+static struct file_operations fops = {
+    .owner = THIS_MODULE,
+    .read = proc_read
+};
+
+
+static ssize_t proc_read(struct file* f, char __user *buf, size_t len, loff_t *off)
+{
+    char str[256];
+    size_t remaining;
+
+    int length = sprintf(str, "Captured ICMP packets:\n rx_packets: %lu\n tx_packets: %lu\n", stats.rx_packets, stats.tx_packets);
+    if (length < 0)
+        return -EFAULT;
+
+    // there's nothing else to read
+    if (*off >= length)
+        return 0;
+    
+    remaining = length - *off;
+    if (len > remaining)
+        len = remaining;
+
+    if (copy_to_user(buf, str + *off, len) != 0)
+        return -EFAULT;
+
+    *off += len;
+
+    return len;
+    
+}
+
 static char check_frame(struct sk_buff *skb, unsigned char data_shift) {
 	unsigned char *user_data_ptr = NULL;
     struct iphdr *ip = (struct iphdr *)skb_network_header(skb);
-    //struct udphdr *udp = NULL;
     struct icmphdr *icmp = NULL;
     int data_len = 0;
 
 	if (IPPROTO_ICMP == ip->protocol) {
-        //udp = (struct udphdr*)((unsigned char*)ip + (ip->ihl * 4));
         icmp = (struct icmphdr*)((unsigned char*)ip + (ip->ihl * 4));
+        if (icmp->type != 8)
+            return 0;
         data_len = ntohs(ip->tot_len) - sizeof(struct icmphdr);
         user_data_ptr = (unsigned char *)(skb->data + sizeof(struct iphdr)  + sizeof(struct icmphdr)) + data_shift;
         memcpy(data, user_data_ptr, data_len);
@@ -146,6 +183,14 @@ int __init vni_init(void) {
         return -EIO;
     }
 
+    entry = proc_create("if_var1", 0444, NULL, &fops);
+    if (entry == NULL)
+    {
+        printk(KERN_ERR "couldn't create proc file");
+        free_netdev(child);
+        return -EFAULT;
+    }
+
     register_netdev(child);
     rtnl_lock();
     netdev_rx_handler_register(priv->parent, &handle_frame, NULL);
@@ -166,6 +211,7 @@ void __exit vni_exit(void) {
     }
     unregister_netdev(child);
     free_netdev(child);
+    proc_remove(entry);
     printk(KERN_INFO "Module %s unloaded", THIS_MODULE->name); 
 } 
 
